@@ -1,5 +1,5 @@
 - hello
-echo hello
+npm install
 
 - world
 echo world

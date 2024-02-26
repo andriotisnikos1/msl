@@ -3,7 +3,7 @@ import { program } from "commander";
 import main from "./main.js";
 
 program
-  .version("0.0.1")
+  .version("0.0.2")
   .description("MSL - Multi Script Lanucher")
   .argument("<script>", "script to run")
   .action(main)

@@ -1,9 +1,7 @@
 import "colors";
 import fsp from "fs/promises";
 import parser from "./parser.js";
-import {exec} from "child_process";
-import { promisify } from "util";
-const execAsync = promisify(exec);
+import {spawn} from "child_process";
 
 async function verifyFile() {
     try {
@@ -19,14 +17,31 @@ interface Script {
     commands: string[];
 }
 
+async function executor(command: string) {
+    return new Promise((resolve, reject) => {
+        const [cmd, ...args] = command.split(" ");
+        const child = spawn(cmd, args, {stdio: "inherit"});
+        child.on("exit", (code) => {
+            if (code === 0) {
+                resolve(0);
+            } else {
+                reject();
+            }
+        });
+        child.on("message", (message) => {
+            console.log(message);
+        })
+        if (child.stdin)
+        process.stdin.pipe(child.stdin);
+    });
+}
+
 async function run(script: Script) {
     console.log(`running script: ${script.name}`.bgYellow);
     try {
-        for (const command of script.commands) {
+        for await (const command of script.commands) {
             console.log(`running: ${command}`.bgCyan);
-            const { stdout, stderr } = await execAsync(command);
-            if (stdout) console.log(stdout);
-            if (stderr) console.error(stderr);
+            await executor(command);
         }
     } catch (error) {
         console.error(`error: cannot run script "${script.name}"`.red);

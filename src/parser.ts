@@ -38,22 +38,22 @@ export default function parser(mslData: string) {
 function keepOrReplace(part: string, variables: [string, string][]): string {
     try {
         const parts = part.split(":")
-        if (parts.length !== 2) return part
+        if (parts.length !== 2) return "$" + part
         const source = parts[0] as varSrc
         const name = parts[1]
         switch (source) {
             case "args":
-                return process.argv[Number(name) + 2] || part
+                return process.argv[Number(name) + 2] || "$" + part
             case "env":
                 const env = process.env[name]
-                if (!env) return part
+                if (!env) return "$" + part
                 return env
             case "var":
                 const variable = variables.find((v) => v[0] === name)
-                if (!variable) return part
+                if (!variable) return "$" + part
                 return variable[1]
             default:
-                return part
+                return "$" + part
         }
     } catch (error) {
         console.warn("warning: cannot replace variable: ".yellow + String(error).yellow);
@@ -75,7 +75,8 @@ function applyVariables(script: scriptScruct, variables: [string, string][]): sc
                         continue
                     }
                     const dollarSignParts = p.split("$")
-                    const parsed = dollarSignParts.map((part) => keepOrReplace(part, variables)).join("")
+                    let parsed = dollarSignParts.map((part) => keepOrReplace(part, variables)).join("")
+                    if (parsed.startsWith("$") && parsed[0] === "$") parsed = parsed.slice(1)
                     cmd += parsed + " "
                 }
                 return cmd

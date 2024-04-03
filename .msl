@@ -2,7 +2,7 @@ def var:hello hello world
 def env:NODE_ENV productionista
 
 - hello
-echo $var:hello
+echo hello $(echo world)
 
 - world
 echo $var:hello

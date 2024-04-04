@@ -4,10 +4,14 @@ type scriptScruct = { name: string, commands: string[] }[]
 
 export default function parser(mslData: string) {
     try {
+        // init parser
         let variables: [string, string][] = []
         const rows = mslData.split("\n\n")
+        // start modifing the scripts
         const scripts = rows.map((script) => {
+            // line is a variable definition - begin parsing
             if (script.startsWith("def")) {
+                // variables may be defined one under another so \n\n is not a good separator
                 const varDefs = script.split("\n")
                 for (let i = 0; i < varDefs.length; i++) {
                     const v = varDefs[i]
@@ -16,9 +20,12 @@ export default function parser(mslData: string) {
                 }
                 return null
             }
+            // end of variable definition
+            // begin parsing script
             if (!script.startsWith("- ")) return null;
             const lines = script.split("\n");
             const name = lines[0].slice(2);
+            // filter out invalid commands
             const commands = lines.slice(1).map((line) => {
                 if (line.startsWith(" ") || line.startsWith("-")) {
                     console.warn(`warning: line "${line}" is not a valid command`.yellow);
@@ -27,6 +34,7 @@ export default function parser(mslData: string) {
             }).filter((line) => line !== null) as string[]
             return { name, commands } 
         })
+        // filter out invalid scripts and apply variables
         const parsed = scripts.filter((script) => script !== null) as scriptScruct
         return applyVariables(parsed, variables)
     } catch (error) {
@@ -37,10 +45,12 @@ export default function parser(mslData: string) {
 
 function keepOrReplace(part: string, variables: [string, string][]): string {
     try {
+        // init
         const parts = part.split(":")
-        if (parts.length !== 2) return "$" + part
         const source = parts[0] as varSrc
         const name = parts[1]
+        if (parts.length !== 2) return "$" + part
+        // replace based on source
         switch (source) {
             case "args":
                 return process.argv[Number(name) + 2] || "$" + part
@@ -65,15 +75,19 @@ function applyVariables(script: scriptScruct, variables: [string, string][]): sc
     try {
         return script.map((s) => {
             const commands = s.commands.map(c => {
+                // if no variables are present in the command, return it as is
                 if (!c.includes("$")) return c
                 const parts = c.split(" ")
+                // reconstruct the command with replaced variables
                 let cmd = ""
                 for (let i = 0; i < parts.length; i++) {
                     const p = parts[i]
+                    // if no variables are present in the part, return it as is
                     if (!p.includes("$")) {
                         cmd += p + " "
                         continue
                     }
+                    // replace variables in the part
                     const dollarSignParts = p.split("$")
                     let parsed = dollarSignParts.map((part) => keepOrReplace(part, variables)).join("")
                     if (parsed.startsWith("$") && parsed[0] === "$") parsed = parsed.slice(1)

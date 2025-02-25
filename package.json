@@ -1,0 +1,20 @@
+{
+  "name": "@andriotis/msl",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "link": "tsc && npm link"
+  },
+  "bin": {
+    "msl": "./dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.20",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "commander": "^12.0.0"
+  }
+}
